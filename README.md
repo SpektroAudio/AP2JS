@@ -112,3 +112,6 @@ The rectangular buttons above the display are named ```track_1``` through ```tra
 
 - AP2JS Beta may cause issues if used alongside Ableton Live.
 
+# DISCLAIMER
+
+While AP2JS should be safe to use, Ícaro Ferre or Spektro Audio are not responsible for any damages or errors. Use at your risk.

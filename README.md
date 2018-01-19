@@ -6,6 +6,7 @@ AP2JS is a JavaScript script for Cycling 74' Max 7 / 8 designed to simplify the 
 The different methods available in AP2JS lets the user control the leds of the 8x8 pad grid, buttons, and touchstrip.  
 AP2JS also re-routes MIDI commands coming from the Push 2 (pad /button presses + encoder direction) to it's second output to simplify the programming process.
 
+Current version: 0.01 (BETA)
 
 AP2JS was created by Ícaro Ferre ([@icaroferre](http://twitter.com/icaroferre)).
 

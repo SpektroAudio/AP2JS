@@ -13,7 +13,7 @@ setoutletassist(midi_outlet, "MIDI Out (connect to midiout)")
 info_outlet = 1
 setoutletassist(info_outlet, "Info Out (connect to route)")
 
-ap2js_version = 0.001
+ap2js_version = 0.01
 
 grid_note_offset = 36
 device_button_offset = 20

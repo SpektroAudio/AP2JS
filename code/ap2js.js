@@ -13,7 +13,7 @@ setoutletassist(midi_outlet, "MIDI Out (connect to midiout)")
 info_outlet = 1
 setoutletassist(info_outlet, "Info Out (connect to route)")
 
-ap2js_version = 0.01
+ap2js_version = 0.02
 
 grid_note_offset = 36
 device_button_offset = 20
@@ -33,6 +33,10 @@ var require_user_mode = 1;
 
 var button_colors = {
 	36 : [0, 1]
+}
+
+var pad_last_color = {
+	36: 1
 }
 
 var button_list = {
@@ -239,6 +243,16 @@ function get_pad_color(x, y, i) {
 	}
 } 
 
+function get_pad_lastcolor(nn) {
+	if (nn in pad_last_color) {
+		lastcolor = pad_last_color[nn]
+		return lastcolor
+	}
+	else {
+		return 0
+	}
+}
+
 function set_pad_color(x, y, off, on) {
 	nn = get_pad_nn(x, y);
 	pad_colors[nn] = [off, on];
@@ -263,19 +277,23 @@ function set_allpads_color(off, on) {
 }
 
 function set_pad(x, y, value) {
-	is_symbol =  isNaN(value);
-
-	if (is_symbol == 0) {
-		note_out(get_pad_nn(x,y), value, 1);
-	}
-	else if (is_symbol == 1) {
-		if (value == "on") {
-			value = 1;
+	is_symbol = isNaN(value);
+	nn = get_pad_nn(x,y);
+	if (get_pad_lastcolor(nn) != value) {
+		if (is_symbol == 0) {
+			note_out(nn, value, 1);
 		}
-		else if (value == "off") {
-			value = 0;
-		};
-		note_out(get_pad_nn(x,y), get_pad_color(x, y, value), 1);
+		else if (is_symbol == 1) {
+			if (value == "on") {
+				value = 1;
+			}
+			else if (value == "off") {
+				value = 0;
+			};
+			value = get_pad_color(x, y, value);
+			note_out(nn, value, 1);
+		}
+		pad_last_color[nn] = value;
 	}
 }
 
@@ -318,16 +336,19 @@ function set_row_fill(y, fill, value) {
 	}
 
 	is_symbol =  isNaN(i);
-	if (is_symbol == 0) {
-		clear_row(y);
-	}
-	else if (is_symbol == 1) {
-		set_row(y, "off");
-	}
 
 	for (var i = 0; i < fill; i++) {
 		set_pad(i, y, value);
 	}
+	for (var i = grid_width; i >= fill; i--) {
+		if (is_symbol == 0) {
+			set_pad(i, y, 0);
+		}
+		else if (is_symbol == 1) {
+			set_pad(i, y, "off");
+		}
+	}
+
 }
 
 function set_column_fill(x, fill, value) {
@@ -336,15 +357,18 @@ function set_column_fill(x, fill, value) {
 	}
 
 	is_symbol =  isNaN(i);
-	if (is_symbol == 0) {
-		clear_column(x);
-	}
-	else if (is_symbol == 1) {
-		set_column(x, "off");
-	}
 	
 	for (var i = 0; i < fill; i++) {
 		set_pad(x, i, value);
+	}
+
+	for (var i = grid_height; i >= fill; i--) {
+		if (is_symbol == 0) {
+			set_pad(x, i, 0);
+		}
+		else if (is_symbol == 1) {
+			set_pad(x, i, "off");
+		}
 	}
 }
 

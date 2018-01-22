@@ -6,7 +6,7 @@ AP2JS is a JavaScript script for Cycling 74' Max 7 / 8 designed to simplify the 
 The different methods available in AP2JS lets the user control the leds of the 8x8 pad grid, buttons, and touchstrip. AP2JS also includes extra methods for using 8x1 rows / columns as "faders" and for setting exclusive buttons per row / column (similar to a radio buttons).    
 AP2JS also re-routes MIDI commands coming from the Push 2 (pad /button presses + encoder direction) to it's second output to simplify the programming process.
 
-Current version: 0.02 (BETA)
+Current version: 0.03 (BETA)
 
 AP2JS was created by Ícaro Ferre ([@icaroferre](http://twitter.com/icaroferre)).
 
@@ -108,9 +108,7 @@ The rectangular buttons above the display are named ```track_1``` through ```tra
 
 # KNOWN ISSUES / LIMITATIONS
 
-- Some of the pads methods "re-draw" all pads therefore it's not incredibly efficient and can crash the Push 2 if the period between messages is too short (< 50ms).
-
-- AP2JS Beta may cause issues if used alongside Ableton Live.
+- The touchstrip is not recalled correctly when switching from Live mode back to User mode. A possible workaround is to manually send a ```restore_touchstrip``` message to ```js ap2js.js```. 
 
 # DISCLAIMER
 

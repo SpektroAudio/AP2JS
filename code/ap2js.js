@@ -13,7 +13,7 @@ setoutletassist(midi_outlet, "MIDI Out (connect to midiout)")
 info_outlet = 1
 setoutletassist(info_outlet, "Info Out (connect to route)")
 
-ap2js_version = 0.02
+ap2js_version = 0.03
 
 grid_note_offset = 36
 device_button_offset = 20
@@ -30,16 +30,16 @@ var pad_colors = {
 }
 var push_mode = 0;
 var require_user_mode = 1;
+var max_for_live = 1;
 
-var button_colors = {
-	36 : [0, 1]
-}
-
-var pad_last_color = {
-	36: 1
-}
+var button_colors = {}
+var pad_last_color = {}
+var button_last_color = {}
+var touchstrip_value = 0;
 
 var button_list = {
+	"setup" : [30, 0],
+	"user" : [59,0],
 	"add_device" : [52, 0],
 	"add_track" : [53, 0],
  	"device" :  [110, 0],
@@ -94,7 +94,15 @@ var button_list = {
 	"device_5" : [24, 1],
 	"device_6" : [25, 1],
 	"device_7" : [26, 1],
-	"device_8" : [27, 1]
+	"device_8" : [27, 1],
+	"scene_1" : [43, 1],
+	"scene_2" : [42, 1],
+	"scene_3" : [41, 1],
+	"scene_4" : [40, 1],
+	"scene_5" : [39, 1],
+	"scene_6" : [38, 1],
+	"scene_7" : [37, 1],
+	"scene_8" : [36, 1]
 }
 
 var encoder_numbers = [14, 15, 71, 72, 73, 74, 75, 76, 77, 78, 79]
@@ -107,36 +115,55 @@ function loadbang() {
 }
 
 function initialize(){
+	maxforlive(0);
 	set_mode("user");
 	set_touchstrip_mode("default");
 }
 
 function set_mode(mode) {
-	available_modes = {
-		"live": 0,
-		"user": 1,
-		"both": 2,
-	}
-	if (mode in available_modes) {
+	if (max_for_live != 1) {
+		available_modes = {
+			"live": 0,
+			"user": 1,
+			"both": 2,
+		}
 		mode_number = available_modes[mode];
-		post("\n", "Setting Push 2 to mode:", mode_number, "(" + mode + ")");
+		if (mode in available_modes) {
+			post("\n", "[ap2js] Setting Push 2 to mode:", mode_number, "(" + mode + ")");
+		}
+		else {
+			error("\n", "[ap2js] Invalid mode. Setting Push 2 to Live mode.")
+			mode = 0;
+		}
+		initialize_command = [240, 0, 33, 29, 1, 1, 10, mode_number, 247]
+		for (var i = 0; i < initialize_command.length; i++) {
+			outlet(midi_outlet, initialize_command[i]);
+		}
 	}
 	else {
-		error("\n", "Invalid mode. Setting Push 2 to Live mode.")
-		mode = 0;
-	}
-
-	initialize_command = [240, 0, 33, 29, 1, 1, 10, mode_number, 247]
-	for (var i = 0; i < initialize_command.length; i++) {
-		outlet(midi_outlet, initialize_command[i]);
+		error("\n", "[ap2js] Can't change Push 2 mode: Max for Live mode enabled.")
 	}
 }
 
-function get_pad_colordict() {
+function maxforlive(i) {
+	if (i == 0 || i == 1) {
+		max_for_live = i;
+	}
+}
+
+function get_pads_colordict() {
 	for (key in pad_colors) {
 		post("\n", key, pad_colors[key])
 	}
 }
+
+function get_pads_lastcolordict() {
+	for (key in pad_last_color) {
+		post("\n", key, pad_last_color[key])
+	}
+}
+
+// MIDI / SYSEX
 
 function msg_int(i) {
 	if (data_stream == false) {
@@ -204,7 +231,13 @@ function parse_sysex(sysex_command) {
 	switch(true) {
 		case sysex_id == 10:
 			push_mode = sysex_args;
-			post("\n", "[HARDWARE RESPONSE] Push 2 set to mode:", push_mode)
+			post("\n", "[ap2js] [HARDWARE RESPONSE] Push 2 set to mode:", push_mode)
+			mode_number = push_mode;
+			if (mode_number == 1 && max_for_live == 1) {
+				restore_pads();
+				restore_buttons();
+				restore_touchstrip();
+			}
 			break;
 	}
 }
@@ -229,7 +262,9 @@ function get_pad_state(nn, value) {
 	total_buttons = grid_height * grid_width
 	if (nn >= grid_note_offset && (nn - grid_note_offset) < total_buttons) {
 	xy = get_pad_xy(nn)
+	if (value != 0) {
 	outlet(info_outlet, "xy", xy[0], xy[1], value);
+	}
 	}
 }
 
@@ -279,6 +314,7 @@ function set_allpads_color(off, on) {
 function set_pad(x, y, value) {
 	is_symbol = isNaN(value);
 	nn = get_pad_nn(x,y);
+
 	if (get_pad_lastcolor(nn) != value) {
 		if (is_symbol == 0) {
 			note_out(nn, value, 1);
@@ -410,6 +446,15 @@ function clip_y(y) {
 	return y;
 }
 
+function restore_pads(){
+	for (key in pad_last_color){
+		key = parseInt(key);
+		color = parseInt(pad_last_color[key]);
+		note_out(key, 0, 1);
+		note_out(key, color, 1);
+	}
+}
+
 // BUTTON FUNCTIONS
 
 function get_button_name(cc) {
@@ -419,7 +464,7 @@ function get_button_name(cc) {
 			return name
 		}
 	}
-	error("\n", "get_button_name: button not found")
+	error("\n", "[ap2js] get_button_name: button not found")
 }
 
 
@@ -432,7 +477,7 @@ function get_button_cc(name) {
 			return button_list[name][0]
 		}
 		else {
-			error("\n", "get_button_cc: invalid button name")
+			error("\n", "[ap2js] get_button_cc: invalid button name")
 		}
 	}
 	else {
@@ -456,7 +501,7 @@ function get_button_type(name) {
 		}
 	}
 	else {
-		error("\n", "get_button_type: invalid button name")
+		error("\n", "[ap2js] get_button_type: invalid button name")
 	}
 }
 
@@ -493,31 +538,33 @@ function set_button_color(name, off, on) {
 		button_colors[cc] = [off, on];
 	}
 	else {
-		error("\n", "set_button_color: invalid button name")
+		error("\n", "[ap2js] set_button_color: invalid button name")
 	}
 }
 
 function set_button(name, value) {
 	is_value_symbol = isNaN(value);
 	is_name_symbol = isNaN(name)
-
 	if (is_name_symbol == 1) {
-		name = get_button_cc(name)
+			name = get_button_cc(name)
 	}
+	if (button_last_color[name] != value) {
 
-	if (is_value_symbol == 0) {
-		cc_out(name, value, 1);
-	}
-	else if (is_value_symbol == 1) {
-		if (value == "on") {
-			value = 1;
+		if (is_value_symbol == 0) {
+			cc_out(name, value, 1);
 		}
-		else if (value == "off") {
-			value = 0;
-		};
-		cc_out(name, get_button_color(name, value), 1);
+		else if (is_value_symbol == 1) {
+			if (value == "on") {
+				value = 1;
+			}
+			else if (value == "off") {
+				value = 0;
+			};
+			value = get_button_color(name, value);
+			cc_out(name, value, 1);
+		}
+		button_last_color[name] = value;
 	}
-	
 }
 
 function set_button_blink(name, value) {
@@ -534,17 +581,25 @@ function get_button_list() {
 	}
 }
 
+
+function restore_buttons(){
+	for (key in button_last_color){
+		key = parseInt(get_button_cc(key));
+		color = parseInt(button_last_color[key]);
+		cc_out(key, color, 1);
+	}
+}
+
 // TOUCHSTRIP
 function set_touchstrip_mode(mode) {
 	tstrip_address = [240, 0, 33, 29, 1, 1, 23];
-
 	mode_list = {
 		"pitch-bend" : 104,
 		"mod-wheel" : 4,
 		"default" : 5,
 		"centered" : 21
-	}
-
+	};
+	post("\n", "[ap2js] Setting touchstrip to mode:", mode);
 	for (var i = 0; i < tstrip_address.length; i++) {
 		outlet(midi_outlet, tstrip_address[i]);
 	}
@@ -553,7 +608,18 @@ function set_touchstrip_mode(mode) {
 }
 
 function set_touchstrip(value) {
+	if (value != touchstrip_value) {
 	cc_out(1, value, 1);
+	touchstrip_value = value;
+	}
+}
+
+function restore_touchstrip() {
+	tvalue = touchstrip_value
+	set_touchstrip_mode("default");
+	for (var i; i < 900000; i++) {
+	}
+	cc_out(1, parseInt(tvalue), 1);
 }
 
 // ENCODERS
@@ -589,21 +655,28 @@ function get_encoder_state(cc, value){
 // MIDI FUNCTIONS
 
 function note_out(note, vel, ch) {
+	note = parseInt(note);
+	vel = parseInt(vel);
+	ch = parseInt(ch);
 	if (ch < 1) {
 		ch = 1;
 	};
 	if ((require_user_mode == 1 && push_mode != 0) || require_user_mode == 0) {
+		//post("\n", "[ap2js] midiout:", note, vel, ch)
 		outlet(midi_outlet, 143 + ch);
 		outlet(midi_outlet, note);
 		outlet(midi_outlet, vel);
 	}
 	else if (require_user_mode == 1 && push_mode == 0) {
-		error("\n", "Push 2 set to Live mode. Please initialize.")
+		error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
 	}
 	
 }
 
 function cc_out(cc, vel, ch) {
+	cc = parseInt(cc);
+	vel = parseInt(vel);
+	ch = parseInt(ch);
 	if (ch < 1) {
 		ch = 1;
 	};
@@ -613,7 +686,7 @@ function cc_out(cc, vel, ch) {
 		outlet(midi_outlet, vel);
 	}
 	else if (require_user_mode == 1 && push_mode == 0) {
-		error("\n", "Push 2 set to Live mode. Please initialize.")
+		error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
 	}
 	
 }

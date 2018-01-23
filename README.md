@@ -61,32 +61,44 @@ The pads and buttons can also be set to other colors without overwritting the co
 
 ## GLOBAL
 
+```initialize```: sets the Push 2 to ```User``` mode and sets the touchstrip to ```Default``` mode.
+
 ```set_mode(mode)```: sets the Push 2 mode (modes available: live, user, both).
 
 ## PADS
 
 Pads can be addressed via their X/Y position on the 8x8 grid (x and y valued range from 0 to 7).  
 
-```set_pad_color(x, y, off, on)```: sets the off and on colors for the pad in the x/y position
-```set_row_color(y, off, on)```: sets the off  and on colors for an entire row of pads
-```set_column_color(x, off, on)```: sets the off  and on colors for an entire column of pads  
-```set_allpads_color(off, on)```: sets the off  and on colors for all pads
+```set_pad_color(x, y, off, on)```: sets the off and on colors for the pad in the x/y position  
 
-```set_pad(x, y, value)```: set the pad in the x/y position to a color (if value is integer) or to a state (if value is "on" or "off")
+```set_row_color(y, off, on)```: sets the off  and on colors for an entire row of pads  
+
+```set_column_color(x, off, on)```: sets the off  and on colors for an entire column of pads  
+
+```set_allpads_color(off, on)```: sets the off  and on colors for all pads  
+
+```set_pad(x, y, value)```: set the pad in the x/y position to a color (if value is integer) or to a state (if value is "on" or "off")  
+
 ```set_pad_blink(x, y, value)```: sets the blink mode (value = 1 or 0) of the pad in the x/y position
 
-```set_row(y, value)```: set a row of pads to a color (if value is integer) or to a state (if value is "on" or "off")
+```set_row(y, value)```: set a row of pads to a color (if value is integer) or to a state (if value is "on" or "off")  
+
 ```set_column(x, value)```:  set a column of pads to a color (if value is integer) or to a state (if value is "on" or "off")
 
 ```clear_row(y)```: set a row of pads to "off"  
+
 ```clear_column(x)```:  set a row of pads to "off"  
+
 ```clear_all()```: set all pads to "off"
 
 ```set_row_fill(y, fill, value)```: sets a row (```y```) as a horizontal fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").  
+
 ```set_column_fill(x, fill, value)```: sets a column (```x```) as a vertical fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").  
 
 ```set_row_exclusive(x, y)```: clears row ```y``` and sets x/y pad to "on"  
+
 ```set_column_exclusive(x, y)```: clears column ```x``` and sets x/y pad to "on"  
+
 ```set_xy_exclusive(x, y)```: clears all pads and sets x/y pad to "on"  
 
 ## BUTTONS
@@ -98,8 +110,10 @@ The rectangular buttons above the display are named ```track_1``` through ```tra
 
 ```set_button_color(name, off, on)```: sets the "off" and "on" colors of the button
 
-```set_button(name, value)```: set button to a specific color (if value is integer) or to a state (if value is "on" or "off")
-```set_button_blink(name, value)```: sets the blink mode (value = 1 or 0) of the button
+```set_button(name, value)```: set button to a specific color (if value is integer) or to a state (if value is "on" or "off")  
+
+```set_button_blink(name, value)```: sets the blink mode (value = 1 or 0) of the button  
+
 ```get_button_list()```: prints a list of all available buttons to the Max Window / Console.
 
 ## TOUCHSTRIP

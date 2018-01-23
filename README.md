@@ -25,14 +25,16 @@ Developed by **Spektro Audio**
 
 - Create a new Max patch.
 - Open the Snippet section of the side-bar and drag the ```[ap2js] Basic Setup``` snippet into your patch.
-- Click on the ```initialize``` message.
+- If you wish to run **AP2JS alongside Ableton Live**, click on the Push 2 **User button** to enable AP2JS.
+- If you'd like to use **AP2JS without Ableton Live**, click on the ```initialize``` message.
 
 ## Manual Instructions:
 
 - Add a ```js ap2js.js``` object to your Max patch
 - Add a ```midiin``` and a ```midiout``` to your Max Patch. Set both to the Push 2 User port.
 - Route the output of the ```midiin``` to the input of the ```js ap2js.js``` and route the output of the ```js ap2js.js``` to the input of the ```midiout``` object.
-- Send a ```initialize``` message to the ```js ap2js.js``` object.
+- If you wish to run **AP2JS alongside Ableton Live**, click on the Push 2 **User button** to enable AP2JS.
+- If you'd like to use **AP2JS without Ableton Live**, send a ```initialize``` message to the ```js ap2js.js``` object.
 
 **ATTENTION: AP2JS is designed to only send messages when in User Mode therefore the Push must be set to User Mode via the initialize message / method.** 
 
@@ -102,7 +104,7 @@ The rectangular buttons above the display are named ```track_1``` through ```tra
 
 ## TOUCHSTRIP
 
-```set_touchstrip_mode```: sets the touchstrip mode (available modes: ```default``` or ```centered``).
+```set_touchstrip_mode```: sets the touchstrip mode (available modes: ```default``` or ```centered```).
 
 ```set_touchstrip```: sets the touchstrip value (0 - 127).
 

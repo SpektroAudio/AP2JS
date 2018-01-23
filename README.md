@@ -78,16 +78,16 @@ Pads can be addressed via their X/Y position on the 8x8 grid (x and y valued ran
 ```set_row(y, value)```: set a row of pads to a color (if value is integer) or to a state (if value is "on" or "off")
 ```set_column(x, value)```:  set a column of pads to a color (if value is integer) or to a state (if value is "on" or "off")
 
-```clear_row(y)```: set a row of pads to "off"
-```clear_column(x)```:  set a row of pads to "off"
+```clear_row(y)```: set a row of pads to "off"  
+```clear_column(x)```:  set a row of pads to "off"  
 ```clear_all()```: set all pads to "off"
 
-```set_row_fill(y, fill, value)```: sets a row (```y```) as a horizontal fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").
-```set_column_fill(x, fill, value)```: sets a column (```x```) as a vertical fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").
+```set_row_fill(y, fill, value)```: sets a row (```y```) as a horizontal fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").  
+```set_column_fill(x, fill, value)```: sets a column (```x```) as a vertical fader by setting a number of pads (```fill```) to  ```value``` (remaining pads are set to "off").  
 
-```set_row_exclusive(x, y)```: clears row ```y``` and sets x/y pad to "on"
-```set_column_exclusive(x, y)```: clears column ```x``` and sets x/y pad to "on"
-```set_xy_exclusive(x, y)```: clears all pads and sets x/y pad to "on"
+```set_row_exclusive(x, y)```: clears row ```y``` and sets x/y pad to "on"  
+```set_column_exclusive(x, y)```: clears column ```x``` and sets x/y pad to "on"  
+```set_xy_exclusive(x, y)```: clears all pads and sets x/y pad to "on"  
 
 ## BUTTONS
 

@@ -6,7 +6,7 @@ AP2JS is a JavaScript script for Cycling 74' Max 7 / 8 designed to simplify the 
 The different methods available in AP2JS lets the user control the leds of the 8x8 pad grid, buttons, and touchstrip. AP2JS also includes extra methods for using 8x1 rows / columns as "faders" and for setting exclusive buttons per row / column (similar to a radio buttons).    
 AP2JS also re-routes MIDI commands coming from the Push 2 (pad /button presses + encoder direction) to it's second output to simplify the programming process.
 
-Current version: 0.03 (BETA)
+Current version: 0.04 (BETA)
 
 AP2JS was created by Ícaro Ferre ([@icaroferre](http://twitter.com/icaroferre)).
 
@@ -61,9 +61,13 @@ The pads and buttons can also be set to other colors without overwritting the co
 
 ## GLOBAL
 
+```parallel(0/1)```:  activates parallel mode which makes AP2JS to work alongside Ableton Live via the Push 2 User Mode.
+
 ```initialize```: sets the Push 2 to ```User``` mode and sets the touchstrip to ```Default``` mode.
 
 ```set_mode(mode)```: sets the Push 2 mode (modes available: live, user, both).
+
+```set_blinkrate(rate)```:  sets the blink rate for the pads and buttons (1-16).
 
 ## PADS
 
@@ -99,7 +103,11 @@ Pads can be addressed via their X/Y position on the 8x8 grid (x and y valued ran
 
 ```set_column_exclusive(x, y)```: clears column ```x``` and sets x/y pad to "on"  
 
-```set_xy_exclusive(x, y)```: clears all pads and sets x/y pad to "on"  
+```set_xy_exclusive(x, y)```: clears all pads and sets x/y pad to "on" 
+
+```set_pads_outputmode(mode)```:  sets the output mode for the pads (```0``` outputs **on** notes only, ```1``` outputs **on** and **off** notes).
+
+
 
 ## BUTTONS
 
@@ -118,7 +126,7 @@ The rectangular buttons above the display are named ```track_1``` through ```tra
 
 ## TOUCHSTRIP
 
-```set_touchstrip_mode```: sets the touchstrip mode (available modes: ```default``` or ```centered```).
+```set_touchstrip_mode```: sets the touchstrip mode (available modes: ```default```,  ```centered```,  and ```bottom```).
 
 ```set_touchstrip```: sets the touchstrip value (0 - 127).
 

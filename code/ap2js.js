@@ -13,7 +13,7 @@ setoutletassist(midi_outlet, "MIDI Out (connect to midiout)")
 info_outlet = 1
 setoutletassist(info_outlet, "Info Out (connect to route)")
 
-ap2js_version = 0.03
+ap2js_version = 0.04
 
 grid_note_offset = 36
 device_button_offset = 20
@@ -30,12 +30,14 @@ var pad_colors = {
 }
 var push_mode = 0;
 var require_user_mode = 1;
-var max_for_live = 1;
+var parallel_mode = 1;
 
 var button_colors = {}
 var pad_last_color = {}
 var button_last_color = {}
 var touchstrip_value = 0;
+var pads_output_mode = 0;
+var touchstrip_mode = "default";
 
 var button_list = {
 	"setup" : [30, 0],
@@ -107,6 +109,23 @@ var button_list = {
 
 var encoder_numbers = [14, 15, 71, 72, 73, 74, 75, 76, 77, 78, 79]
 
+// SET PRIVATE FUNCTIONS
+get_pad_nn.local = 1;
+get_pad_xy.local = 1;
+get_pad_state.local = 1;
+get_pad_color.local = 1;
+get_pad_lastcolor.local = 1;
+clip_x.local = 1;
+clip_y.local = 1;
+restore_pads.local = 1;
+get_button_name.local = 1;
+get_button_cc.local = 1;
+get_button_state.local = 1;
+get_button_type.local = 1;
+get_button_color.local = 1;
+get_encoder_name.local = 1;
+get_encoder_state.local = 1;
+
 
 // GLOBAL FUNCTIONS
 
@@ -115,13 +134,13 @@ function loadbang() {
 }
 
 function initialize(){
-	maxforlive(0);
+	parallel(0);
 	set_mode("user");
 	set_touchstrip_mode("default");
 }
 
 function set_mode(mode) {
-	if (max_for_live != 1) {
+	if (parallel_mode != 1) {
 		available_modes = {
 			"live": 0,
 			"user": 1,
@@ -145,10 +164,21 @@ function set_mode(mode) {
 	}
 }
 
-function maxforlive(i) {
+function parallel(i) {
 	if (i == 0 || i == 1) {
-		max_for_live = i;
+		parallel_mode = i;
 	}
+}
+
+function set_blinkrate(i) {
+	if (isNaN(i) == true) {
+		error("\n", "set_blinkrate: invalid value")
+		i = 16;
+	}
+	if (i > 16 || i < 0) {
+		i = 16;
+	}
+	default_blink_rate = i;
 }
 
 function get_pads_colordict() {
@@ -162,6 +192,8 @@ function get_pads_lastcolordict() {
 		post("\n", key, pad_last_color[key])
 	}
 }
+
+
 
 // MIDI / SYSEX
 
@@ -233,7 +265,7 @@ function parse_sysex(sysex_command) {
 			push_mode = sysex_args;
 			post("\n", "[ap2js] [HARDWARE RESPONSE] Push 2 set to mode:", push_mode)
 			mode_number = push_mode;
-			if (mode_number == 1 && max_for_live == 1) {
+			if (mode_number == 1 && parallel_mode == 1) {
 				restore_pads();
 				restore_buttons();
 				restore_touchstrip();
@@ -261,10 +293,15 @@ function get_pad_xy(nn) {
 function get_pad_state(nn, value) {
 	total_buttons = grid_height * grid_width
 	if (nn >= grid_note_offset && (nn - grid_note_offset) < total_buttons) {
-	xy = get_pad_xy(nn)
-	if (value != 0) {
-	outlet(info_outlet, "xy", xy[0], xy[1], value);
-	}
+		xy = get_pad_xy(nn)
+		if (pads_output_mode == 0) {
+			if (value != 0) {
+				outlet(info_outlet, "xy", xy[0], xy[1], value);
+			}
+		}
+		else {
+			outlet(info_outlet, "xy", xy[0], xy[1], value);
+		}
 	}
 }
 
@@ -455,6 +492,13 @@ function restore_pads(){
 	}
 }
 
+function set_pads_outputmode(mode) {
+	if (mode != 0 && mode != 1) {
+		mode = 1
+	}
+	pads_output_mode = mode;
+}
+
 // BUTTON FUNCTIONS
 
 function get_button_name(cc) {
@@ -590,6 +634,13 @@ function restore_buttons(){
 	}
 }
 
+function randomize_all_buttons() {
+	for (key in button_list){
+		color = Math.floor(Math.random() * 127)
+		set_button(key, color, 1);
+	}
+}
+
 // TOUCHSTRIP
 function set_touchstrip_mode(mode) {
 	tstrip_address = [240, 0, 33, 29, 1, 1, 23];
@@ -597,9 +648,12 @@ function set_touchstrip_mode(mode) {
 		"pitch-bend" : 104,
 		"mod-wheel" : 4,
 		"default" : 5,
-		"centered" : 21
+		"centered" : 21,
+		"bottom" :  37,
+		"sysex" : 7
 	};
 	post("\n", "[ap2js] Setting touchstrip to mode:", mode);
+	touchstrip_mode = mode;
 	for (var i = 0; i < tstrip_address.length; i++) {
 		outlet(midi_outlet, tstrip_address[i]);
 	}
@@ -616,7 +670,7 @@ function set_touchstrip(value) {
 
 function restore_touchstrip() {
 	tvalue = touchstrip_value
-	set_touchstrip_mode("default");
+	set_touchstrip_mode(touchstrip_mode);
 	for (var i; i < 900000; i++) {
 	}
 	cc_out(1, parseInt(tvalue), 1);
@@ -668,7 +722,9 @@ function note_out(note, vel, ch) {
 		outlet(midi_outlet, vel);
 	}
 	else if (require_user_mode == 1 && push_mode == 0) {
-		error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
+		if (parallel == 0) {
+			error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
+		}
 	}
 	
 }
@@ -686,7 +742,9 @@ function cc_out(cc, vel, ch) {
 		outlet(midi_outlet, vel);
 	}
 	else if (require_user_mode == 1 && push_mode == 0) {
-		error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
+		if (parallel == 0) {
+			error("\n", "[ap2js] Push 2 set to Live mode. Please initialize.")
+		}
 	}
 	
 }

@@ -61,7 +61,7 @@ The pads and buttons can also be set to other colors without overwritting the co
 
 ## GLOBAL
 
-```parallel(0/1)```:  activates parallel mode which makes AP2JS to work alongside Ableton Live via the Push 2 User Mode.
+```parallel(0/1)```:  activates parallel mode which lets AP2JS to work alongside Ableton Live via the Push 2 User Mode.
 
 ```initialize```: sets the Push 2 to ```User``` mode and sets the touchstrip to ```Default``` mode.
 

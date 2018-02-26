@@ -13,7 +13,7 @@ setoutletassist(midi_outlet, "MIDI Out (connect to midiout)")
 info_outlet = 1
 setoutletassist(info_outlet, "Info Out (connect to route)")
 
-ap2js_version = 0.04
+ap2js_version = 0.05
 
 grid_note_offset = 36
 device_button_offset = 20
@@ -33,11 +33,26 @@ var require_user_mode = 1;
 var parallel_mode = 1;
 
 var button_colors = {}
-var pad_last_color = {}
-var button_last_color = {}
+
+var scenes = {
+	"user" : {
+		"pads" : {},
+		"buttons" : {},
+		"touchstrip" : 0
+	},
+	"clear" : {
+		"pads" : {},
+		"buttons" : {},
+		"touchstrip" : 0
+	}
+};
+var pad_last_color = {};
+var button_last_color = {};
+
 var touchstrip_value = 0;
 var pads_output_mode = 0;
 var touchstrip_mode = "default";
+var last_scene = "";
 
 var button_list = {
 	"setup" : [30, 0],
@@ -117,7 +132,6 @@ get_pad_color.local = 1;
 get_pad_lastcolor.local = 1;
 clip_x.local = 1;
 clip_y.local = 1;
-restore_pads.local = 1;
 get_button_name.local = 1;
 get_button_cc.local = 1;
 get_button_state.local = 1;
@@ -125,7 +139,7 @@ get_button_type.local = 1;
 get_button_color.local = 1;
 get_encoder_name.local = 1;
 get_encoder_state.local = 1;
-
+toBinary.local = 1;
 
 // GLOBAL FUNCTIONS
 
@@ -134,9 +148,11 @@ function loadbang() {
 }
 
 function initialize(){
+	print("Initializing...")
 	parallel(0);
 	set_mode("user");
 	set_touchstrip_mode("default");
+	scene("user");
 }
 
 function set_mode(mode) {
@@ -148,7 +164,7 @@ function set_mode(mode) {
 		}
 		mode_number = available_modes[mode];
 		if (mode in available_modes) {
-			post("\n", "[ap2js] Setting Push 2 to mode:", mode_number, "(" + mode + ")");
+			print("Setting Push 2 to mode: " + mode_number + " (" + mode + ")");
 		}
 		else {
 			error("\n", "[ap2js] Invalid mode. Setting Push 2 to Live mode.")
@@ -183,17 +199,23 @@ function set_blinkrate(i) {
 
 function get_pads_colordict() {
 	for (key in pad_colors) {
-		post("\n", key, pad_colors[key])
+		print(key + ": " + pad_colors[key])
 	}
 }
 
 function get_pads_lastcolordict() {
 	for (key in pad_last_color) {
-		post("\n", key, pad_last_color[key])
+		print(key + ": " + pad_last_color[key])
 	}
 }
 
-
+function get_pads_scenecolordict() {
+	color_dict = scenes[last_scene]["pads"]
+	print("dictname: " + last_scene)
+	for (key in color_dict) {
+		print(key + ": " + pad_last_color[key])
+	}
+}
 
 // MIDI / SYSEX
 
@@ -253,7 +275,7 @@ function parse_midi_message(midi_msg) {
 		parse_sysex(sysex_command)
 	}
 	else {
-		post("\n", midi_msg)
+		print("Unindentified MIDI Message: " + midi_msg)
 	}
 }
 
@@ -263,7 +285,7 @@ function parse_sysex(sysex_command) {
 	switch(true) {
 		case sysex_id == 10:
 			push_mode = sysex_args;
-			post("\n", "[ap2js] [HARDWARE RESPONSE] Push 2 set to mode:", push_mode)
+			print("HARDWARE RESPONSE] Push 2 set to mode: " + push_mode)
 			mode_number = push_mode;
 			if (mode_number == 1 && parallel_mode == 1) {
 				restore_pads();
@@ -272,6 +294,31 @@ function parse_sysex(sysex_command) {
 			}
 			break;
 	}
+}
+
+function scene(scene_name) {
+	print("Selecting scene: " + scene_name)
+	if (last_scene != scene_name) {
+		if (scene_name in scenes) {
+			last_scene = scene_name;
+		}
+		else {
+			print("Scene not found. Creating new scene.")
+			last_scene = scene_name;
+			scenes[scene_name] = {
+				"pads": {},
+				"buttons": {},
+				"touchstrip" : 0
+			}
+		}
+		restore_pads();
+		restore_buttons();
+		restore_touchstrip();
+	}
+}
+
+function print(message) {
+	post("\n", "[ap2js]", message)
 }
 
 
@@ -316,8 +363,8 @@ function get_pad_color(x, y, i) {
 } 
 
 function get_pad_lastcolor(nn) {
-	if (nn in pad_last_color) {
-		lastcolor = pad_last_color[nn]
+	if (nn in scenes[last_scene]["pads"]) {
+		lastcolor = scenes[last_scene]["pads"][nn]
 		return lastcolor
 	}
 	else {
@@ -351,8 +398,7 @@ function set_allpads_color(off, on) {
 function set_pad(x, y, value) {
 	is_symbol = isNaN(value);
 	nn = get_pad_nn(x,y);
-
-	if (get_pad_lastcolor(nn) != value) {
+	if (pad_last_color[nn] != value) {
 		if (is_symbol == 0) {
 			note_out(nn, value, 1);
 		}
@@ -367,6 +413,7 @@ function set_pad(x, y, value) {
 			note_out(nn, value, 1);
 		}
 		pad_last_color[nn] = value;
+		scenes[last_scene]["pads"][nn] = value;
 	}
 }
 
@@ -383,6 +430,14 @@ function set_row(y, value) {
 	}
 }
 
+function set_row_b(y, value) {
+	value_array = toBinary(value);
+	string_values = ["off", "on"]
+	for (var i = 0; i < grid_width; i++) {
+		set_pad(i, y, string_values[value_array[7 - i]]);
+	}
+}
+
 function clear_row(y) {
 	set_row(y, "off");
 }
@@ -390,6 +445,14 @@ function clear_row(y) {
 function set_column(x, value) {
 	for (var i = 0; i < grid_height; i++) {
 		set_pad(x, i, value);
+	}
+}
+
+function set_column_b(x, value) {
+	value_array = toBinary(value);
+	string_values = ["off", "on"]
+	for (var i = 0; i < grid_height; i++) {
+		set_pad(x, i, string_values[value_array[7 - i]]);
 	}
 }
 
@@ -445,6 +508,7 @@ function set_column_fill(x, fill, value) {
 	}
 }
 
+
 function set_row_exclusive(x, y) {
 	x = clip_x(x);
 	y = clip_y(y);
@@ -484,11 +548,25 @@ function clip_y(y) {
 }
 
 function restore_pads(){
-	for (key in pad_last_color){
-		key = parseInt(key);
-		color = parseInt(pad_last_color[key]);
-		note_out(key, 0, 1);
-		note_out(key, color, 1);
+	for (var i = grid_note_offset; i < ((grid_height * grid_width) + grid_note_offset); i++) {
+	//for (key in scenes[last_scene]["pads"]) {
+		key = parseInt(i);
+		if (key in scenes[last_scene]["pads"]) {
+			color = parseInt(scenes[last_scene]["pads"][key]);
+			note_out(key, color, 1);
+			pad_last_color[key] = color;
+		}
+		else {
+			note_out(key, 0, 1);
+			pad_last_color[key] = 0;
+		}
+		/*
+		if (pad_last_color[key] != color) {
+			note_out(key, 0, 1);
+			note_out(key, color, 1);
+			pad_last_color[key] = color;
+		}
+		*/
 	}
 }
 
@@ -592,7 +670,7 @@ function set_button(name, value) {
 	if (is_name_symbol == 1) {
 			name = get_button_cc(name)
 	}
-	if (button_last_color[name] != value) {
+	if (button_last_color != value) {
 
 		if (is_value_symbol == 0) {
 			cc_out(name, value, 1);
@@ -608,6 +686,7 @@ function set_button(name, value) {
 			cc_out(name, value, 1);
 		}
 		button_last_color[name] = value;
+		scenes[last_scene]["buttons"][name] = value;
 	}
 }
 
@@ -620,17 +699,26 @@ function set_button_blink(name, value) {
 }
 
 function get_button_list() {
+	print("Printing list of all available buttons... ")
 	for (var key in button_list) {
-		post("\n", key);
+		print(key);
 	}
 }
 
 
 function restore_buttons(){
-	for (key in button_last_color){
+	for (key in button_list) {
+		print("Restoring buttons: " + key)
 		key = parseInt(get_button_cc(key));
-		color = parseInt(button_last_color[key]);
-		cc_out(key, color, 1);
+		if (key in scenes[last_scene]["buttons"]) {		
+			color = parseInt(scenes[last_scene]["buttons"][key]);
+			cc_out(key, color, 1);
+			button_last_color[key] = color;
+		} else {
+			key = parseInt(get_button_cc(key));
+			cc_out(key, 0, 1);
+			button_last_color[key] = 0;
+		}
 	}
 }
 
@@ -652,7 +740,7 @@ function set_touchstrip_mode(mode) {
 		"bottom" :  37,
 		"sysex" : 7
 	};
-	post("\n", "[ap2js] Setting touchstrip to mode:", mode);
+	print("Setting touchstrip to mode: " + mode);
 	touchstrip_mode = mode;
 	for (var i = 0; i < tstrip_address.length; i++) {
 		outlet(midi_outlet, tstrip_address[i]);
@@ -663,13 +751,14 @@ function set_touchstrip_mode(mode) {
 
 function set_touchstrip(value) {
 	if (value != touchstrip_value) {
-	cc_out(1, value, 1);
-	touchstrip_value = value;
+		cc_out(1, value, 1);
+		touchstrip_value = value;
+		scenes[last_scene]["touchstrip"] = parseInt(value);
 	}
 }
 
 function restore_touchstrip() {
-	tvalue = touchstrip_value
+	tvalue = scenes[last_scene]["touchstrip"]
 	set_touchstrip_mode(touchstrip_mode);
 	for (var i; i < 900000; i++) {
 	}
@@ -706,7 +795,7 @@ function get_encoder_state(cc, value){
 
 }
 
-// MIDI FUNCTIONS
+// MIDI & MISC FUNCTIONS
 
 function note_out(note, vel, ch) {
 	note = parseInt(note);
@@ -747,4 +836,19 @@ function cc_out(cc, vel, ch) {
 		}
 	}
 	
+}
+
+
+function toBinary(value) {
+	value_array = [0, 0, 0, 0, 0, 0, 0, 0,]
+	if (value > 255 || value < 0) {
+		value = 0;
+	}
+	newValue = parseInt(value, 10).toString(2);
+	for (var i = newValue.length - 1; i >= 0; i--) {
+		index1 = (value_array.length - 1) - i;
+		index2 = (newValue.length - 1) - i;
+		value_array[index1] = newValue[index2]
+	}
+	return value_array;
 }

@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 34.0, 78.0, 1257.0, 656.0 ],
+		"rect" : [ 34.0, 78.0, 1140.0, 654.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,15 +39,15 @@
 		"boxes" : [ 			{
 				"box" : 				{
 					"fontface" : 0,
-					"fontsize" : 14.0,
-					"id" : "obj-93",
+					"fontsize" : 12.0,
+					"id" : "obj-1",
 					"linecount" : 9,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 899.0, 130.0, 215.0, 147.0 ],
+					"patching_rect" : [ 899.0, 130.0, 204.0, 127.0 ],
 					"style" : "",
-					"text" : "Steps:\n1 - Initialize the Push\n2 - Set Record button color\n3 - Push Play on the Push to start the show\n4 - Use the Touchstrip to control the rate of the animation\n5 - Press Record to select a new random color"
+					"text" : "Steps:\n• Initialize AP2JS\n• Set Record button color\n• Press Play on the Push to start the show\n• Use the touchstrip to control the rate of the animation\n• Press Record to select a new random color"
 				}
 
 			}
@@ -247,7 +247,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 689.0, 259.5, 132.0, 35.0 ],
+					"patching_rect" : [ 689.0, 259.5, 135.0, 35.0 ],
 					"style" : "",
 					"text" : "set_allpads_color 0 $1, set_button record $1"
 				}

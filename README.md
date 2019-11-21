@@ -17,7 +17,7 @@ Developed by **Spektro Audio**
 
 # HOW TO INSTALL
 
-- Download the latest verison of ap2js.
+- Download the latest version of ap2js.
 - Move folder to a secure location.
 - Open Max's File Preferences, add the ap2js folder and enable the option for sub-folders.
 
@@ -68,7 +68,7 @@ When initialized, AP2JS selects the `user` scene.
 ## COLORS
 
 To make it easier for programmers to set different colors for each pad and button of the Push 2, AP2JS uses **"on"** and **"off"** colors.  
-By default, "off" is set to 0 and "on" is set to 1 (ember). These colors can be overwitten using the different methods available below.  
+By default, "off" is set to 0 and "on" is set to 1 (ember). These colors can be overwritten using the different methods available below.  
 The pads and buttons can also be set to other colors without overwritting the colors of the two states.
 
 ---
